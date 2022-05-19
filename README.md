@@ -1,16 +1,9 @@
 Simplex Calculator
 ==================
 
-Live demo: http://simplex.tode.cz
+Forked from https://github.com/uestla/Simplex-Calculator
 
-This is a simple PHP tool for linear programming problems solving using dual simplex algorithm.
-
-It can detect none, one and only and more optimal solutions to any linear problem you tell it to solve.
-
-However, the only thing that has been left unimplemented is basis cycling detection. Feel free to post pull requests ;-)
-
-Enjoy.
-
+Uses `bcsub` to calculate fractions from decimals in order to avoid floating point issues.
 
 Conventions
 -----------
