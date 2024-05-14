@@ -3,7 +3,7 @@
 /**
  * This file is part of the SimplexCalculator library
  *
- * Copyright (c) 2014 Petr Kessler (http://kesspess.1991.cz)
+ * Copyright (c) 2014 Petr Kessler (https://kesspess.cz)
  *
  * @license  MIT
  * @link     https://github.com/uestla/Simplex-Calculator
@@ -12,65 +12,80 @@
 namespace Simplex;
 
 
-class Helpers
+final class Helpers
 {
 
 	/**
-	 * @param  int $a
-	 * @param  int $b
-	 * @return int
+	 * @param  numeric $a
+	 * @param  numeric $b
+	 * @return numeric-string
 	 */
-	static function gcd($a, $b)
+	public static function gcd($a, $b)
 	{
 		if (!self::isInt($a) || !self::isInt($b)) {
 			throw new \InvalidArgumentException('Integers expected for gcd.');
 		}
 
-		$a = (int) abs($a);
-		$b = (int) abs($b);
+		$a = (string) $a;
+		$b = (string) $b;
 
-		if ($a === 0 && $b === 0) {
+		$aZero = Math::comp($a, '0') === 0;
+		$bZero = Math::comp($b, '0') === 0;
+
+		if ($aZero && $bZero) {
 			throw new \InvalidArgumentException('At least one number must not be a zero.');
 		}
 
-		if ($a === 0) return abs($b);
-		if ($b === 0) return abs($a);
+		if ($aZero) {
+			return $b;
+		}
 
-		return abs(self::gcdRecursive($a, $b));
+		if ($bZero) {
+			return $a;
+		}
+
+		$gcd = '0';
+
+		while (true) {
+			$mod = Math::mod($a, $b);
+
+			if (Math::comp($mod, '0') === 0) {
+				$gcd = $b;
+				break;
+			}
+
+			$a = $b;
+			$b = $mod;
+		}
+
+		return Math::mul($gcd, (string) self::sgn($gcd)); // abs
 	}
-
-
-
-	/**
-	 * @param  int $a
-	 * @param  int $b
-	 * @return int
-	 */
-	private static function gcdRecursive($a, $b)
-	{
-		return ($a % $b) ? self::gcdRecursive($b,$a % $b) : $b;
-	}
-
 
 
 	/**
 	 * @param  numeric $n
 	 * @return int -1, 0, 1
 	 */
-	static function sgn($n)
+	public static function sgn($n)
 	{
-		return $n < 0 ? -1 : ($n > 0 ? 1 : 0);
+		return Math::comp((string) $n, '0');
 	}
 
 
-
 	/**
-	 * @param  numeric $n
+	 * @param  mixed $n
 	 * @return bool
 	 */
-	static function isInt($n)
+	public static function isInt($n)
 	{
-		return is_numeric($n) && round($n) === (float) $n;
+		if (!is_numeric($n)) {
+			return false;
+		}
+
+		$dotPos = strpos((string) $n, '.');
+
+		// either no decimal part or only filled with zeros
+		return $dotPos === false || str_replace('0', '', substr((string) $n, $dotPos)) === '';
 	}
 
 }
