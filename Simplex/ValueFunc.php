@@ -3,7 +3,7 @@
 /**
  * This file is part of the SimplexCalculator library
  *
- * Copyright (c) 2014 Petr Kessler (https://kesspess.cz)
+ * Copyright (c) 2014 Petr Kessler (http://kesspess.1991.cz)
  *
  * @license  MIT
  * @link     https://github.com/uestla/Simplex-Calculator
@@ -12,18 +12,19 @@
 namespace Simplex;
 
 
-final class ValueFunc extends VariableSet
+class ValueFunc extends VariableSet
 {
 
 	/** @var Fraction */
 	private $value;
 
 
+
 	/**
-	 * @param  array<string, Fraction|numeric> $set
+	 * @param  array $set
 	 * @param  Fraction|numeric $value
 	 */
-	public function __construct(array $set, $value)
+	function __construct(array $set, $value)
 	{
 		parent::__construct($set);
 
@@ -31,15 +32,17 @@ final class ValueFunc extends VariableSet
 	}
 
 
+
 	/** @return Fraction */
-	public function getValue()
+	function getValue()
 	{
 		return $this->value;
 	}
 
 
+
 	/** Deep copy */
-	public function __clone()
+	function __clone()
 	{
 		parent::__clone();
 

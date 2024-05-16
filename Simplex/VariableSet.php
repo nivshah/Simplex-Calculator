@@ -3,7 +3,7 @@
 /**
  * This file is part of the SimplexCalculator library
  *
- * Copyright (c) 2014 Petr Kessler (https://kesspess.cz)
+ * Copyright (c) 2014 Petr Kessler (http://kesspess.1991.cz)
  *
  * @license  MIT
  * @link     https://github.com/uestla/Simplex-Calculator
@@ -12,38 +12,42 @@
 namespace Simplex;
 
 
-abstract class VariableSet
+class VariableSet
 {
 
-	/** @var array<string, Fraction> */
+	/** @var array */
 	protected $set;
 
 
-	/** @param  array<string, Fraction|numeric> $set */
-	public function __construct(array $set)
-	{
-		$this->set = array();
 
+	/** @param  array $set [ varname => fraction ] */
+	function __construct(array $set)
+	{
 		foreach ($set as $var => $coeff) {
-			$this->set[$var] = Fraction::create($coeff);
+			$set[$var] = Fraction::create($coeff);
 		}
+
+		ksort($set);
+		$this->set = $set;
 	}
 
 
-	/** @return array<string, Fraction> */
-	public function getSet()
+
+	/** @return array */
+	function getSet()
 	{
 		return $this->set;
 	}
 
 
-	/** @return Fraction|null */
-	public function getMin()
-	{
-		$min = null;
 
-		foreach ($this->set as $coeff) {
-			if ($min === null || $coeff->isLowerThan($min)) {
+	/** @return Fraction|NULL */
+	function getMin()
+	{
+		$min = NULL;
+
+		foreach ($this->set as $var => $coeff) {
+			if ($min === NULL || $coeff->isLowerThan($min)) {
 				$min = $coeff;
 			}
 		}
@@ -52,35 +56,39 @@ abstract class VariableSet
 	}
 
 
+
 	/** @return string[] */
-	public function getVariableList()
+	function getVariableList()
 	{
 		return array_keys($this->set);
 	}
+
 
 
 	/**
 	 * @param  string $var
 	 * @return bool
 	 */
-	public function has($var)
+	function has($var)
 	{
 		return isset($this->set[$var]);
 	}
+
 
 
 	/**
 	 * @param  string $var
 	 * @return Fraction
 	 */
-	public function get($var)
+	function get($var)
 	{
 		return $this->set[$var];
 	}
 
 
+
 	/** Deep copy */
-	public function __clone()
+	function __clone()
 	{
 		foreach ($this->set as $var => $coeff) {
 			$this->set[$var] = clone $coeff;

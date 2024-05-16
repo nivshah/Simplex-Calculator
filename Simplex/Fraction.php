@@ -3,7 +3,7 @@
 /**
  * This file is part of the SimplexCalculator library
  *
- * Copyright (c) 2014 Petr Kessler (https://kesspess.cz)
+ * Copyright (c) 2014 Petr Kessler (http://kesspess.1991.cz)
  *
  * @license  MIT
  * @link     https://github.com/uestla/Simplex-Calculator
@@ -12,157 +12,166 @@
 namespace Simplex;
 
 
-final class Fraction
+class Fraction
 {
 
-	/** @var numeric-string */
-	private $n;
+	/** @var int */
+	private $n = NULL;
 
-	/** @var numeric-string */
-	private $d;
+	/** @var int */
+	private $d = NULL;
+
 
 
 	/**
 	 * @param  numeric $n
 	 * @param  numeric $d
 	 */
-	public function __construct($n, $d = '1')
+	function __construct($n, $d = 1)
 	{
-		list($nn, $nd) = self::factoryParts($n);
-		list($dn, $dd) = self::factoryParts($d);
+		if (Helpers::isInt($n)) {
+			$this->n = (int) $n;
 
-		$this->n = Math::mul($nn, $dd);
-		$this->d = Math::mul($nd, $dn);
+		} else {
+			$nf = self::fromDecimal($n);
+			$this->n = $nf->getNumerator();
+			$this->d = $nf->getDenominator();
+		}
+
+		if (Helpers::isInt($d)) {
+			$this->d = (int) ($d * ($this->d === NULL ? 1 : $this->d));
+
+		} else {
+			$df = self::fromDecimal($d);
+			$this->n = $this->n * $df->getDenominator();
+			$this->d = (int) ($df->getNumerator() * ($this->d === NULL ? 1 : $this->d));
+		}
 
 		$this->canonicalize();
 	}
 
 
+
 	/**
 	 * @param  Fraction|numeric $a
-	 * @return self
+	 * @return Fraction
 	 */
-	public static function create($a)
+	static function create($a)
 	{
 		if ($a instanceof self) {
-			return clone $a;
+			return $a;
 		}
 
 		return new self($a);
 	}
 
 
-	/** @return numeric-string */
-	public function getNumerator()
+
+	/** @return int */
+	function getNumerator()
 	{
 		return $this->n;
 	}
 
 
-	/** @return numeric-string */
-	public function getDenominator()
+
+	/** @return int */
+	function getDenominator()
 	{
 		return $this->d;
 	}
 
 
-	/** @return self */
-	public function canonicalize()
+
+	/** @return Fraction */
+	function canonicalize()
 	{
-		if ($this->d === '0') {
-			throw new DivisionByZeroException('Division by zero.');
+		if ($this->d === 0) {
+			throw new \Exception('Division by zero.');
+		}
+
+		if ($this->d < 0) {
+			$this->n = -$this->n;
+			$this->d = -$this->d;
 		}
 
 		$gcd = Helpers::gcd($this->n, $this->d);
-		$this->n = Math::div($this->n, $gcd);
-		$this->d = Math::div($this->d, $gcd);
-
-		if (Math::comp($this->d, '0') === -1) {
-			$this->n = Math::mul($this->n, '-1');
-			$this->d = Math::mul($this->d, '-1');
-		}
-
+		$this->n /= $gcd;
+		$this->d /= $gcd;
 		return $this;
 	}
+
 
 
 	/**
 	 * a/b + c/d = (ad + bc)/bd
 	 *
 	 * @param  Fraction|numeric $a
-	 * @return self
+	 * @return Fraction
 	 */
-	public function add($a)
+	function add($a)
 	{
 		$a = self::create($a);
-
-		return new self(
-			Math::add(
-				Math::mul($this->n, $a->getDenominator()),
-				Math::mul($this->d, $a->getNumerator())
-			),
-			Math::mul($this->d, $a->getDenominator())
-		);
+		return new self($this->n * $a->getDenominator() + $this->d * $a->getNumerator(), $this->d * $a->getDenominator());
 	}
+
 
 
 	/**
 	 * a/b - c/d = (ad - bc)/bd
 	 *
 	 * @param  Fraction|numeric $a
-	 * @return self
+	 * @return Fraction
 	 */
-	public function subtract($a)
+	function subtract($a)
 	{
-		return $this->add(self::create($a)->multiply('-1'));
+		return $this->add(self::create($a)->multiply(-1));
 	}
+
 
 
 	/**
 	 * (a/b)(c/d) = (ac/bd)
 	 *
 	 * @param  Fraction|numeric $a
-	 * @return self
+	 * @return Fraction
 	 */
-	public function multiply($a)
+	function multiply($a)
 	{
 		$a = self::create($a);
-
-		return new self(
-			Math::mul($this->n, $a->getNumerator()),
-			Math::mul($this->d, $a->getDenominator())
-		);
+		return new self($this->n * $a->getNumerator(), $this->d * $a->getDenominator());
 	}
+
 
 
 	/**
 	 * (a/b)/(c/d) = ad/bc
 	 *
 	 * @param  Fraction|numeric $a
-	 * @return self
+	 * @return Fraction
 	 */
-	public function divide($a)
+	function divide($a)
 	{
 		$a = self::create($a);
 		return $this->multiply(new self($a->getDenominator(), $a->getNumerator()));
 	}
 
 
+
 	/** @return int -1, 0, 1 */
-	public function sgn()
+	function sgn()
 	{
 		return Helpers::sgn($this->n);
 	}
 
 
-	/** @return self */
-	public function absVal()
+
+	/** @return Fraction */
+	function absVal()
 	{
-		return new self(
-			Math::mul((string) $this->sgn(), $this->n),
-			$this->d
-		);
+		return new self($this->sgn() * $this->n, $this->d);
 	}
+
 
 
 	/**
@@ -171,116 +180,86 @@ final class Fraction
 	 * @param  Fraction|numeric $a
 	 * @return int -1, 0, 1
 	 */
-	public function compare($a)
+	function compare($a)
 	{
 		$a = self::create($a);
-
-		return Helpers::sgn(Math::sub(
-			Math::mul($this->n, $a->getDenominator()),
-			Math::mul($a->getNumerator(), $this->d)
-		));
+		return Helpers::sgn($this->n * $a->getDenominator() - $a->getNumerator() * $this->d);
 	}
+
 
 
 	/**
 	 * @param  Fraction|numeric $a
 	 * @return bool
 	 */
-	public function isEqualTo($a)
+	function isEqualTo($a)
 	{
 		return $this->compare($a) === 0;
 	}
 
 
+
 	/**
 	 * @param  Fraction|numeric $a
 	 * @return bool
 	 */
-	public function isLowerThan($a)
+	function isLowerThan($a)
 	{
 		return $this->compare($a) === -1;
 	}
 
 
-	/** @return string */
-	public function toString()
-	{
-		return $this->n . ($this->d !== '1' ? '/' . $this->d : '');
-	}
-
-
-	/** @return string */
-	public function __toString()
-	{
-		return $this->toString();
-	}
-
 
 	/**
 	 * @param  Fraction|numeric $a
 	 * @return bool
 	 */
-	public function isGreaterThan($a)
+	function isGreaterThan($a)
 	{
 		return $this->compare($a) === 1;
 	}
 
 
+
+	/** @return string */
+	function toString()
+	{
+		return $this->n . ($this->d !== 1 ? '/' . $this->d : '');
+	}
+
+
+
 	/** @return float */
-	public function toFloat()
+	function toFloat()
 	{
 		return $this->n / $this->d;
 	}
 
 
-	/**
-	 * @param  numeric $a
-	 * @return array{numeric-string, numeric-string}
-	 */
-	private function factoryParts($a)
+
+	/** @return string */
+	function __toString()
 	{
-		if (!is_numeric($a)) {
-			throw new \InvalidArgumentException(sprintf('Non-numeric argument "%s".', $a));
+		return $this->toString();
+	}
+
+
+
+	/**
+	 * 0.25 => 25/100
+	 *
+	 * @param  float $n
+	 * @return Fraction
+	 */
+	private static function fromDecimal($n)
+	{
+		if (Helpers::isInt($n)) {
+			return new self($n);
 		}
 
-		$d = '1';
-		$m = '1';
-
-		$expParts = explode('E', str_replace('e', 'E', (string) $a));
-		$dotParts = explode('.', $expParts[0]);
-
-		if (isset($expParts[1], $dotParts[1])) {
-			throw new \InvalidArgumentException('Floats with scientific notation are not supported.');
-		}
-
-		if (isset($expParts[1])) {
-			if ($expParts[1][0] === '-') { // negative exponent
-				/** @var numeric-string $exp */
-				$exp = substr($expParts[1], 1);
-
-				$d = Math::pow('10', $exp);
-
-			} else {
-				/** @var numeric-string $exp */
-				$exp = $expParts[1];
-
-				$m = Math::pow('10', $exp);
-			}
-		}
-
-		if (isset($dotParts[1])) {
-			/** @var numeric-string $n */
-			$n = implode('', $dotParts);
-			$d = Math::pow('10', (string) strlen($dotParts[1]));
-
-		} else {
-			/** @var numeric-string $n */
-			$n = $dotParts[0];
-		}
-
-		$n = Math::mul($n, $m);
-
-		return array($n, $d);
+		$decpart = (float) bcsub($n, (int) $n, 10);
+		$mlp = pow(10, strlen($decpart) - 2 - ($n < 0 ? 1 : 0));
+		return new self((int) ($n * $mlp), $mlp);
 	}
 
 }

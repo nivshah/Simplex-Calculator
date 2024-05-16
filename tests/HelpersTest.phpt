@@ -1,47 +1,38 @@
 <?php
 
-namespace Simplex\Tests;
-
 use Tester\Assert;
 use Simplex\Helpers;
-use Tester\TestCase;
-
 
 require_once __DIR__ . '/bootstrap.php';
 
 
-final class HelpersTest extends TestCase
-{
+Assert::true(Helpers::isInt('0785'));
+Assert::true(Helpers::isInt('-788'));
+Assert::true(Helpers::isInt('-788e8'));
+Assert::false(Helpers::isInt(NULL));
+Assert::false(Helpers::isInt(TRUE));
+Assert::false(Helpers::isInt(array()));
+Assert::false(Helpers::isInt('a'));
 
-	/** @return void */
-	public function testMain()
-	{
-		Assert::same(1, Helpers::sgn(7));
-		Assert::same(-1, Helpers::sgn(-7));
-		Assert::same(0, Helpers::sgn(0));
+Assert::equal(1, Helpers::sgn(7));
+Assert::equal(-1, Helpers::sgn(-7));
+Assert::equal(0, Helpers::sgn(0));
 
-		Assert::same('3', Helpers::gcd(6, 27));
-		Assert::same('3', Helpers::gcd(-6, 27));
-		Assert::same('3', Helpers::gcd(6, -27));
-		Assert::same('3', Helpers::gcd(-6, -27));
+Assert::equal(3, Helpers::gcd(6, 27));
+Assert::equal(3, Helpers::gcd(-6, 27));
+Assert::equal(3, Helpers::gcd(6, -27));
+Assert::equal(3, Helpers::gcd(-6, -27));
 
-		Assert::same('1', Helpers::gcd(1, 24));
-		Assert::same('21', Helpers::gcd(0, 21));
-		Assert::same('21', Helpers::gcd(21, 0));
-		Assert::same('256', Helpers::gcd(1400000000000000256, 100000000000000000));
+Assert::equal(1, Helpers::gcd(1, 24));
+Assert::equal(21, Helpers::gcd(0, 21));
+Assert::equal(256, Helpers::gcd(1400000000000000256, 100000000000000000));
 
-		Assert::exception(function () {
-			Helpers::gcd(0, 0);
+Assert::exception(function () {
+	Helpers::gcd(0, 0);
 
-		}, 'InvalidArgumentException', 'At least one number must not be a zero.');
+}, 'InvalidArgumentException', 'At least one number must not be a zero.');
 
-		Assert::exception(function () {
-			Helpers::gcd('asDF', 1);
+Assert::exception(function () {
+	Helpers::gcd('ahoj', 1);
 
-		}, 'InvalidArgumentException', 'Integers expected for gcd.');
-	}
-
-}
-
-
-id(new HelpersTest)->run();
+}, 'InvalidArgumentException', 'Integers expected for gcd.');

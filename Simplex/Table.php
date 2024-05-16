@@ -3,7 +3,7 @@
 /**
  * This file is part of the SimplexCalculator library
  *
- * Copyright (c) 2014 Petr Kessler (https://kesspess.cz)
+ * Copyright (c) 2014 Petr Kessler (http://kesspess.1991.cz)
  *
  * @license  MIT
  * @link     https://github.com/uestla/Simplex-Calculator
@@ -12,7 +12,7 @@
 namespace Simplex;
 
 
-final class Table
+class Table
 {
 
 	/** @var TableRow[] */
@@ -21,63 +21,76 @@ final class Table
 	/** @var TableRow */
 	private $z;
 
-	/** @var TableRow|null */
+	/** @var TableRow|NULL */
 	private $z2;
 
 	/** @var string[] */
 	private $basis = array();
 
-	/** @var array<string, Fraction>|false */
-	private $solution;
+	/** @var array|bool */
+	private $solution = NULL;
 
-	/** @var self|bool */
-	private $alternative;
+	/** @var array|bool */
+	private $alternative = NULL;
 
 
-	public function __construct(ValueFunc $z, ValueFunc $z2 = null)
+
+	/**
+	 * @param  ValueFunc $z
+	 * @param  ValueFunc $z2
+	 */
+	function __construct(ValueFunc $z, ValueFunc $z2 = NULL)
 	{
-		if ($z2 !== null && $z2->getVariableList() !== $z->getVariableList()) {
+		if ($z2 !== NULL && $z2->getVariableList() !== $z->getVariableList()) {
 			throw new \InvalidArgumentException("Variables of both objective functions don't match.");
 		}
 
-		$this->z = new TableRow('z', $z->getSet(), '0');
-		$this->z2 = $z2 ? new TableRow('z\'', $z2->getSet(), $z2->getValue()) : null;
+		$this->z = new TableRow('z', $z->getSet(), 0);
+		$this->z2 = $z2 ? new TableRow('z\'', $z2->getSet(), $z2->getValue()) : NULL;
 	}
 
 
+
 	/** @return string[] */
-	public function getVariableList()
+	function getVariableList()
 	{
 		return $this->z->getVariableList();
 	}
 
 
+
 	/** @return TableRow */
-	public function getZ()
+	function getZ()
 	{
 		return $this->z;
 	}
 
 
-	/** @return TableRow|null */
-	public function getZ2()
+
+	/** @return TableRow|NULL */
+	function getZ2()
 	{
 		return $this->z2;
 	}
 
 
+
 	/** @return bool */
-	public function hasZ2()
+	function hasZ2()
 	{
-		return $this->z2 !== null;
+		return $this->z2 !== NULL;
 	}
 
 
-	/** @return self */
-	public function addRow(TableRow $row)
+
+	/**
+	 * @param  TableRow $row
+	 * @return Table
+	 */
+	function addRow(TableRow $row)
 	{
 		if ($row->getVariableList() !== $this->z->getVariableList()
-				|| ($this->z2 !== null && $row->getVariableList() !== $this->z2->getVariableList())) {
+				|| ($this->z2 !== NULL && $row->getVariableList() !== $this->z2->getVariableList())) {
 			throw new \InvalidArgumentException("Row variables don't match the objective function variables.");
 		}
 
@@ -87,123 +100,114 @@ final class Table
 	}
 
 
-	/** @return string[] */
-	public function getBasis()
-	{
-		return $this->basis;
-	}
-
 
 	/** @return TableRow[] */
-	public function getRows()
+	function getRows()
 	{
 		return $this->rows;
 	}
 
 
+
 	/** @return bool */
-	public function hasHelperInBasis()
+	function hasHelperInBasis()
 	{
 		foreach ($this->rows as $row) {
 			if (strncmp($row->getVar(), 'y', 1) === 0) {
-				return true;
+				return TRUE;
 			}
 		}
 
-		return false;
+		return FALSE;
 	}
 
 
+
 	/** @return bool */
-	public function isSolved()
+	function isSolved()
 	{
-		if ($this->z2 !== null) {
+		if ($this->z2 !== NULL) {
 			foreach ($this->z2->getSet() as $coeff) {
-				if ($coeff->isLowerThan('0')) {
-					return false;
+				if ($coeff->isLowerThan(0)) {
+					return FALSE;
 				}
 			}
 
-			if ($this->hasHelperInBasis() || !$this->z2->getB()->isEqualTo('0')) {
-				$this->solution = false;
-				return true;
+			if (!$this->z2->getB()->isEqualTo(0) || $this->hasHelperInBasis()) {
+				$this->solution = FALSE;
+				return TRUE;
 			}
 		}
 
 		$keyval = $this->z->getMin();
+		$keycol = array_search($keyval, $this->z->getSet(), TRUE);
 
-		if ($keyval === null) {
-			$this->solution = false;
-			return true;
-		}
-
-		$keycol = array_search($keyval, $this->z->getSet(), true);
-
-		if ($keyval->isLowerThan('0')) {
+		if ($keyval->isLowerThan(0)) {
 			foreach ($this->rows as $row) {
 				$set = $row->getSet();
-				if ($set[$keycol]->isGreaterThan('0')) {
-					return false;
+				if ($set[$keycol]->isGreaterThan(0)) {
+					return FALSE;
 				}
 			}
 
-			$this->solution = false;
+			$this->solution = FALSE;
 		}
 
-		return true;
+		return TRUE;
 	}
 
 
-	/** @return array<string, Fraction>|false|null */
-	public function getSolution()
+
+	/** @return array|bool|NULL */
+	function getSolution()
 	{
 		return $this->solution;
 	}
 
 
+
 	/** @return bool */
-	public function hasSolution()
+	function hasSolution()
 	{
 		return is_array($this->solution);
 	}
 
 
+
 	/** @return bool */
-	public function hasAlternativeSolution()
+	function hasAlternativeSolution()
 	{
-		return $this->getAlternativeSolution() !== false;
+		return $this->getAlternativeSolution() !== FALSE;
 	}
 
 
-	/** @return self|bool */
-	public function getAlternativeSolution()
+
+	/** @return Table|bool */
+	function getAlternativeSolution()
 	{
-		if ($this->alternative === null) {
-			if (!is_array($this->solution)) {
-				$this->alternative = false;
+		if ($this->alternative === NULL) {
+			if (!$this->hasSolution()) {
+				$this->alternative = FALSE;
 
 			} else {
 				foreach ($this->solution as $var => $value) {
-					if ($value->isEqualTo('0') && !in_array($var, $this->basis, true)) {
+					if ($value->isEqualTo(0) && !in_array($var, $this->basis, TRUE)) {
 						$clone = clone $this;
+						$solution = $clone->nextStep()->getSolution();
 
-						$nextStepSolution = $clone->nextStep()->getSolution();
-
-						if (is_array($nextStepSolution)) {
-							foreach ($nextStepSolution as $v => $val) {
-								if (!$val->isEqualTo($this->solution[$v])) {
-									$this->alternative = $clone;
-									break 2;
-								}
+						foreach ($clone->nextStep()->getSolution() as $v => $val) {
+							if (!$val->isEqualTo($this->solution[$v])) {
+								$this->alternative = $clone;
+								break 2;
 							}
 						}
 
-						$this->alternative = false;
+						$this->alternative = FALSE;
 						break;
 					}
 				}
 
-				$this->alternative === null && ($this->alternative = false);
+				$this->alternative === NULL && ($this->alternative = FALSE);
 			}
 		}
 
@@ -211,14 +215,15 @@ final class Table
 	}
 
 
-	/** @return string|null */
-	public function getKeyColumn()
+
+	/** @return string|NULL */
+	function getKeyColumn()
 	{
 		$zrow = $this->hasHelperInBasis() ? 'z2' : 'z';
 
-		$keycol = $keyval = null;
+		$keycol = $keyval = NULL;
 		foreach ($this->$zrow->getSet() as $var => $coeff) {
-			if ($keyval === null || $coeff->isLowerThan($keyval)) {
+			if ($keyval === NULL || $coeff->isLowerThan($keyval)) {
 				$keyval = $coeff;
 				$keycol = $var;
 			}
@@ -228,20 +233,21 @@ final class Table
 	}
 
 
-	/** @return TableRow|null */
-	public function getKeyRow()
+
+	/** @return TableRow|NULL */
+	function getKeyRow()
 	{
-		$mint = $keyrow = null;
+		$mint = $keyrow = NULL;
 		$keycol = $this->getKeyColumn();
 
-		if ($keycol === null) {
-			return null;
+		if ($keycol === NULL) {
+			return NULL;
 		}
 
 		foreach ($this->rows as $row) {
 			$set = $row->getSet();
-			if ($set[$keycol]->isGreaterThan('0')
-					&& ($mint === null || $row->getB()->divide($set[$keycol])->isLowerThan($mint))) {
+			if ($set[$keycol]->isGreaterThan(0)
+					&& ($mint === NULL || $row->getB()->divide($set[$keycol])->isLowerThan($mint))) {
 				$mint = $row->getB()->divide($set[$keycol]);
 				$keyrow = $row;
 			}
@@ -251,10 +257,11 @@ final class Table
 	}
 
 
-	/** @return self */
-	public function nextStep()
+
+	/** @return Table */
+	function nextStep()
 	{
-		if ($this->z2 !== null && !$this->hasHelperInBasis()) {
+		if ($this->z2 !== NULL && !$this->hasHelperInBasis()) {
 			$this->removeHelpers();
 		}
 
@@ -262,27 +269,25 @@ final class Table
 		$keycol = $this->getKeyColumn();
 		$keyrow = $this->getKeyRow();
 
-		if ($keycol === null || $keyrow === null) {
+		if ($keycol === NULL || $keyrow === NULL) {
 			return $this;
 		}
-
-		$keyval = $keyrow->get($keycol);
 
 		foreach ($this->rows as $row) {
 			$rowset = array();
 
 			if ($row->getVar() === $keyrow->getVar()) {
 				$var = $keycol;
-				$b = $row->getB()->divide($keyval);
+				$b = $row->getB()->divide($keyrow->get($keycol));
 
 				foreach ($row->getSet() as $v => $c) {
-					$rowset[$v] = $c->divide($keyval);
+					$rowset[$v] = $c->divide($keyrow->get($keycol));
 				}
 
 			} else {
 				$var = $row->getVar();
 				$set = $row->getSet();
-				$dvd = $set[$keycol]->multiply(-1)->divide($keyval);
+				$dvd = $set[$keycol]->multiply(-1)->divide($keyrow->get($keycol));
 				$b = $dvd->multiply($keyrow->getB())->add($row->getB());
 
 				foreach ($row->getSet() as $v => $c) {
@@ -294,32 +299,41 @@ final class Table
 		}
 
 		$this->rows = array();
-		$this->basis = array();
-
 		foreach ($newrows as $var => $meta) {
 			$this->addRow(new TableRow($var, $meta[0], $meta[1]));
 		}
 
-		$this->z = $this->transformZFunction($this->z, $keycol, $keyrow);
+		foreach (array('z', 'z2') as $zvar) {
+			if ($this->$zvar === NULL) continue;
 
-		if ($this->z2 !== null) {
-			$this->z2 = $this->transformZFunction($this->z2, $keycol, $keyrow);
+			$zcoeffs = array();
+			$zdvd = $this->$zvar->get($keycol)->multiply(-1)->divide($keyrow->get($keycol));
+			foreach ($this->$zvar->getSet() as $v => $c) {
+				$zcoeffs[$v] = $zdvd->multiply($keyrow->get($v))->add($c);
+			}
+
+			$this->$zvar = new TableRow($zvar, $zcoeffs, $zdvd->multiply($keyrow->getB())->add($this->$zvar->getB()));
 		}
 
 		// find solution (if any)
 		if ($this->isSolved()) {
-			if ($this->solution !== false) {
+			if ($this->solution !== FALSE) {
 				$this->solution = array();
 
 				foreach ($this->z->getVariableList() as $var) {
-					if (strncmp($var, 'y', 1) === 0) {
-						continue;
+					if (strncmp($var, 'y', 1) === 0) continue;
+
+					foreach ($this->rows as $row) {
+						if ($row->getVar() === $var) {
+							$this->solution[$var] = $row->getB();
+							continue 2;
+						}
 					}
 
-					$this->solution[$var] = isset($newrows[$var][1]) ? $newrows[$var][1] : new Fraction('0');
+					$this->solution[$var] = Fraction::create(0);
 				}
 
-				uksort($this->solution, 'strnatcmp');
+				ksort($this->solution);
 			}
 		}
 
@@ -327,27 +341,11 @@ final class Table
 	}
 
 
-	/**
-	 * @param  string $keycol
-	 * @return TableRow
-	 */
-	private function transformZFunction(TableRow $z, $keycol, TableRow $keyrow)
-	{
-		$coeffs = array();
-		$dvd = $z->get($keycol)->multiply('-1')->divide($keyrow->get($keycol));
-
-		foreach ($z->getSet() as $v => $c) {
-			$coeffs[$v] = $dvd->multiply($keyrow->get($v))->add($c);
-		}
-
-		return new TableRow($z->getVar(), $coeffs, $dvd->multiply($keyrow->getB())->add($z->getB()));
-	}
-
 
 	/** @return void */
 	private function removeHelpers()
 	{
-		$this->z2 = null;
+		$this->z2 = NULL;
 
 		$newrows = array();
 		foreach ($this->rows as $row) {
@@ -374,8 +372,9 @@ final class Table
 	}
 
 
+
 	/** Deep copy */
-	public function __clone()
+	function __clone()
 	{
 		foreach ($this->rows as $key => $row) {
 			$this->rows[$key] = clone $row;
