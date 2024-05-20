@@ -41,7 +41,7 @@ final class Task
 	/** @return self */
 	public function addRestriction(Restriction $r)
 	{
-		if ($r->getVariableList() !== $this->function->getVariableList()) {
+		if (count(array_diff($r->getVariableList(), $this->function->getVariableList()))) {
 			throw new \InvalidArgumentException("Restriction variables don't match the objective function variables.");
 		}
 
