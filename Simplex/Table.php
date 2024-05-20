@@ -36,7 +36,7 @@ final class Table
 
 	public function __construct(ValueFunc $z, ValueFunc $z2 = null)
 	{
-		if ($z2 !== null && $z2->getVariableList() !== $z->getVariableList()) {
+		if ($z2 !== null && count(array_diff($z2->getVariableList(), $z->getVariableList()))) {
 			throw new \InvalidArgumentException("Variables of both objective functions don't match.");
 		}
 
@@ -76,8 +76,8 @@ final class Table
 	/** @return self */
 	public function addRow(TableRow $row)
 	{
-		if ($row->getVariableList() !== $this->z->getVariableList()
-				|| ($this->z2 !== null && $row->getVariableList() !== $this->z2->getVariableList())) {
+		if (count(array_diff($row->getVariableList(), $this->z->getVariableList()))
+				|| ($this->z2 !== null && count(array_diff($row->getVariableList(), $this->z2->getVariableList())))) {
 			throw new \InvalidArgumentException("Row variables don't match the objective function variables.");
 		}
 
